@@ -192,15 +192,19 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
     protected List<URL> loadRegistries(boolean provider) {
         //校验RegistryConfig配置数组
         checkRegistry();
+        /**
+         * TODO 为什么上面已经校验过一次checkRegistryConfig了，此时相当于已经获取了所有的注册中心地址，下面遍历的时候还要再来一次。
+         */
         //创建注册中心URL数组
         List<URL> registryList = new ArrayList<>();
         if (registries != null && !registries.isEmpty()) {
             for (RegistryConfig config : registries) {
                 String address = config.getAddress();
                 if (address == null || address.length() == 0) {
+                    //若address为空，则将其设为0.0.0.0
                     address = Constants.ANYHOST_VALUE;
                 }
-                //获得注册中心地址
+                //从系统中获得注册中心地址
                 String sysaddress = System.getProperty("dubbo.registry.address");
                 //系统配置覆盖配置文件配置
                 if (sysaddress != null && sysaddress.length() > 0) {
@@ -233,8 +237,10 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
                     for (URL url : urls) {
                         // 设置 `registry=${protocol}` 和 `protocol=registry` 到 URL
                         url = url.addParameter(Constants.REGISTRY_KEY, url.getProtocol());
-                        url = url.setProtocol(Constants.REGISTRY_PROTOCOL);
-                        //添加到结果
+                        url = url.setProtocol(Constants.REGISTRY_PROTOCOL);//将协议头设置为registry
+                        //通过判断条件，决定是否添加url到registryList中，条件如下：
+                        //(服务提供者 && register = true 或 null)
+                        // || （非服务提供者 && subscribe = true 或 null）
                         if ((provider && url.getParameter(Constants.REGISTER_KEY, true))
                                 || (!provider && url.getParameter(Constants.SUBSCRIBE_KEY, true))) {
                             registryList.add(url);

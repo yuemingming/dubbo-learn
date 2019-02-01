@@ -273,6 +273,8 @@ public class DubboProtocol extends AbstractProtocol {
         URL url = invoker.getUrl();
         //创建DubboExporter对象，并添加到`exorterMap`
         // export service.
+        //获取服务表示，理解成服务坐标也行。由服务组名，服务名，服务版本号以及端口组成。比如：
+        //demoGroup/com.alibaba.dubbo.demo.DemoService:1.0.1:20880
         String key = serviceKey(url);
         DubboExporter<T> exporter = new DubboExporter<T>(invoker, key, exporterMap);
         exporterMap.put(key, exporter);
@@ -351,7 +353,9 @@ public class DubboProtocol extends AbstractProtocol {
         //校验Client的Dubbo SPI拓展是否存在
         str = url.getParameter(Constants.CLIENT_KEY);
         if (str != null && str.length() > 0) {
+            //获取所有Transporter实现类名称的集合，比如supportedTypes = [netty,mina]
             Set<String> supportedTypes = ExtensionLoader.getExtensionLoader(Transporter.class).getSupportedExtensions();
+            //检测当前Dubbo所支持的Transporter实现类名称列表中是否包含client所表示的Transporter，若不包含，则抛出异常。
             if (!supportedTypes.contains(str)) {
                 throw new RpcException("Unsupported client type: " + str);
             }
