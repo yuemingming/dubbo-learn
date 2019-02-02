@@ -68,7 +68,7 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
         //保存已经调用的Invoker
         List<Invoker<T>> invoked = new ArrayList<Invoker<T>>(copyinvokers.size()); // invoked invokers.
         Set<String> providers = new HashSet<String>(len);
-        //failover机制核心实现，如果粗线调用失败，那么重试其他服务器
+        //failover机制核心实现，如果出现调用失败，那么重试其他服务器
         for (int i = 0; i < len; i++) {
             //Reselect before retry to avoid a change of candidate `invokers`.
             //NOTE: if `invokers` changed, then `invoked` also lose accuracy.
@@ -76,7 +76,8 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
             //注意，如果列表发生了变化，那么invoked判断会失效，因为invoker实例已经发生了改变
             if (i > 0) {
                 checkWhetherDestroyed();
-                //根据Invocation的信息从Directory中获取所有可用的invoker
+                // 在进行重试前重新列举 Invoker，这样做的好处是，如果某个服务挂了，
+                // 通过调用 list 可得到最新可用的 Invoker 列表
                 copyinvokers = list(invocation);
                 // check again
                 //重新检查一下
