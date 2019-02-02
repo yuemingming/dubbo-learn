@@ -423,6 +423,7 @@ public class DubboProtocol extends AbstractProtocol {
         //是否共享连接
         // whether to share connection
         boolean service_share_connect = false;
+        //获取连接数，默认为0，表示未配置
         int connections = url.getParameter(Constants.CONNECTIONS_KEY, 0);
         // if not configured, connection is shared, otherwise, one connection for one service
         if (connections == 0) {//未配置时，默认共享
@@ -447,10 +448,12 @@ public class DubboProtocol extends AbstractProtocol {
     private ExchangeClient getSharedClient(URL url) {
         //从集合中，查找ReferenceCountExchangeClient对象
         String key = url.getAddress();
+        //获取带有"引用计数"功能的ExchangeClient
         ReferenceCountExchangeClient client = referenceClientMap.get(key);
         if (client != null) {
             //若未关闭，增加指向该Client的数量，并返回他。
             if (!client.isClosed()) {
+                //增加引用计数
                 client.incrementAndGetCount();
                 return client;
              //若已关闭，移除
@@ -468,7 +471,7 @@ public class DubboProtocol extends AbstractProtocol {
             }
             //创建ExchangeClient对象
             ExchangeClient exchangeClient = initClient(url);
-            //将`exchangeClient`包装，创建ReferenceCountExchangeClient对象
+            //将`exchangeClient`包装，创建ReferenceCountExchangeClient对象，装饰模式
             client = new ReferenceCountExchangeClient(exchangeClient, ghostClientMap);
             //添加到集合
             referenceClientMap.put(key, client);
