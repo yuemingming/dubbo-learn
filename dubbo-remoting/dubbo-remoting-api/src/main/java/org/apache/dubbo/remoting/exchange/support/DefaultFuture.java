@@ -109,9 +109,10 @@ public class DefaultFuture implements ResponseFuture {
     private DefaultFuture(Channel channel, Request request, int timeout) {
         this.channel = channel;
         this.request = request;
+        //获取请求id，这id很重要，后面还会见到
         this.id = request.getId();
         this.timeout = timeout > 0 ? timeout : channel.getUrl().getPositiveParameter(Constants.TIMEOUT_KEY, Constants.DEFAULT_TIMEOUT);
-        // put into waiting map.
+        // 存储 <requestId, DefaultFuture> 映射关系到 FUTURES 中
         FUTURES.put(id, this);
         CHANNELS.put(id, channel);
     }
@@ -209,13 +210,15 @@ public class DefaultFuture implements ResponseFuture {
         if (timeout <= 0) {
             timeout = Constants.DEFAULT_TIMEOUT;
         }
-        //若未完成，等待
+        //检测服务提供方是否成功返回了调用结果
         if (!isDone()) {
             long start = System.currentTimeMillis();
             lock.lock();
             try {
-                while (!isDone()) {//等待完成或超时
+                while (!isDone()) {// 循环检测服务提供方是否成功返回了调用结果
+                    // 如果调用结果尚未返回，这里等待一段时间
                     done.await(timeout, TimeUnit.MILLISECONDS);
+                    // 如果调用结果成功返回，或等待超时，此时跳出 while 循环，执行后续的逻辑
                     if (isDone() || System.currentTimeMillis() - start > timeout) {
                         break;
                     }
@@ -225,12 +228,12 @@ public class DefaultFuture implements ResponseFuture {
             } finally {
                 lock.unlock();
             }
-            //未完成，抛出超时异常
+            //如果调用结果仍未返回，则抛出超时异常
             if (!isDone()) {
                 throw new TimeoutException(sent > 0, channel, getTimeoutMessage(false));
             }
         }
-        //返回响应
+        //返回调用结果
         return returnFromResponse();
     }
 

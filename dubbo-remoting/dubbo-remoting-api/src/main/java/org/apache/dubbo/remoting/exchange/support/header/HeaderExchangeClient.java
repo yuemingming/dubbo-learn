@@ -93,6 +93,7 @@ public class HeaderExchangeClient implements ExchangeClient {
 
     @Override
     public ResponseFuture request(Object request) throws RemotingException {
+        //直接调用HeaderExchangeChannel对象的同签名方法
         return channel.request(request);
     }
 
@@ -108,6 +109,7 @@ public class HeaderExchangeClient implements ExchangeClient {
 
     @Override
     public ResponseFuture request(Object request, int timeout) throws RemotingException {
+        //直接HeaderExchangeChannel对象的同签名方法
         return channel.request(request, timeout);
     }
 
@@ -232,6 +234,7 @@ public class HeaderExchangeClient implements ExchangeClient {
     }
 
     private void doClose() {
+        //停止心跳检测定时器
         stopHeartbeatTimer();
     }
 

@@ -63,8 +63,10 @@ final class NettyChannel extends AbstractChannel {
         if (ch == null) {
             return null;
         }
+        //尝试从集合中获取NettyChannel实例
         NettyChannel ret = channelMap.get(ch);
         if (ret == null) {
+            //如果ret = null,则创建一个新的NettyChannel实例
             NettyChannel nettyChannel = new NettyChannel(ch, url, handler);
             if (ch.isActive()) {//连接中
                 ret = channelMap.putIfAbsent(ch, nettyChannel);//添加到channelMap

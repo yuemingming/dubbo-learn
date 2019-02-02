@@ -41,11 +41,11 @@ public class InvokerInvocationHandler implements InvocationHandler {
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         String methodName = method.getName();
         Class<?>[] parameterTypes = method.getParameterTypes();
-        //wait等方法，直接反射调用
+        // 拦截定义在 Object 类中的方法（未被子类重写），比如 wait/notify
         if (method.getDeclaringClass() == Object.class) {
             return method.invoke(invoker, args);
         }
-        //基础方法，不适用使用RPC调用
+        // 如果 toString、hashCode 和 equals 等方法被子类重写了，这里也直接调用
         if ("toString".equals(methodName) && parameterTypes.length == 0) {
             return invoker.toString();
         }

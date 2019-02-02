@@ -103,14 +103,20 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
             //单向调用
             if (isOneway) {
                 boolean isSent = getUrl().getMethodParameter(methodName, Constants.SENT_KEY, false);
+                //发送请求
                 currentClient.send(inv, isSent);
+                //设置上下文中的future字段为null
                 RpcContext.getContext().setFuture(null);
+                //返回一个空的RpcResult
                 return new RpcResult();
                 //异步调用
             } else if (isAsync) {
+                //发送请求，并得到一个ResponseFuture实例
                 ResponseFuture future = currentClient.request(inv, timeout);
                 // For compatibility
+                //设置future到上下文中
                 FutureAdapter<Object> futureAdapter = new FutureAdapter<>(future);
+                //暂时返回一个空结果
                 RpcContext.getContext().setFuture(futureAdapter);
 
                 Result result;
@@ -124,6 +130,7 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
                 //同步调用
             } else {
                 RpcContext.getContext().setFuture(null);
+                // 发送请求，得到一个 ResponseFuture 实例，并调用该实例的 get 方法进行等待
                 return (Result) currentClient.request(inv, timeout).get();
             }
         } catch (TimeoutException e) {

@@ -52,13 +52,16 @@ public class ChannelEventRunnable implements Runnable {
 
     @Override
     public void run() {
+        //检测通道状态，对于请求或响应消息，此时state=RECEIVED
         if (state == ChannelState.RECEIVED) {
             try {
+                //将channel和message传给ChannelHandler对象，进行后续的调用
                 handler.received(channel, message);
             } catch (Exception e) {
                 logger.warn("ChannelEventRunnable handle " + state + " operation error, channel is " + channel
                         + ", message is " + message, e);
             }
+            //其他类型通过switch进行处理
         } else {
             switch (state) {
             case CONNECTED:

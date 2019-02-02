@@ -158,6 +158,7 @@ public class NettyClient extends AbstractClient {
         Channel c = channel;
         if (c == null || !c.isActive())
             return null;
+        //获取一个NettyChannel类型对象
         return NettyChannel.getOrAddChannel(c, getUrl(), this);
     }
 

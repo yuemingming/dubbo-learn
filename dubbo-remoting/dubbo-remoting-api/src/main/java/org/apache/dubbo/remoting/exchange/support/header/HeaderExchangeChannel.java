@@ -55,6 +55,7 @@ final class HeaderExchangeChannel implements ExchangeChannel {
         if (channel == null) {
             throw new IllegalArgumentException("channel == null");
         }
+        //这里的channel执行的是NettyClient
         this.channel = channel;
     }
 

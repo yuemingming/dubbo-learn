@@ -31,29 +31,37 @@ import java.util.List;
 public abstract class AbstractLoadBalance implements LoadBalance {
 
     static int calculateWarmupWeight(int uptime, int warmup, int weight) {
-        //计算权重
+        // 计算权重，下面代码逻辑上形似于 (uptime / warmup) * weight。
+        // 随着服务运行时间 uptime 增大，权重计算值 ww 会慢慢接近配置值 weight
         int ww = (int) ((float) uptime / ((float) warmup / (float) weight));
-        // 权重范围为 [0, weight] 之间
         return ww < 1 ? 1 : (ww > weight ? weight : ww);
     }
-    //默认只有一个时，直接返回这一个
     @Override
     public <T> Invoker<T> select(List<Invoker<T>> invokers, URL url, Invocation invocation) {
         if (invokers == null || invokers.isEmpty()) {
             return null;
         }
+        //如果invokers列表中仅有一个Invoker，直接返回即可，无需进行负载均衡
         if (invokers.size() == 1) {
             return invokers.get(0);
         }
+        //调用 doSelect 方法进行负载均衡，该方法为抽象子方法，由子类实现。
         return doSelect(invokers, url, invocation);
     }
 
     protected abstract <T> Invoker<T> doSelect(List<Invoker<T>> invokers, URL url, Invocation invocation);
 
+    /**
+     * 服务提供者权重计算逻辑
+     * @param invoker
+     * @param invocation
+     * @return 传入Invoker对应的服务提供者的权重
+     */
     protected int getWeight(Invoker<?> invoker, Invocation invocation) {
         // 获得 weight 配置，即服务权重。默认为 100
         int weight = invoker.getUrl().getMethodParameter(invocation.getMethodName(), Constants.WEIGHT_KEY, Constants.DEFAULT_WEIGHT);
         if (weight > 0) {
+            //获得服务提供者启动时间戳
             long timestamp = invoker.getUrl().getParameter(Constants.REMOTE_TIMESTAMP_KEY, 0L);
             if (timestamp > 0L) {
                 //获得启动总时长

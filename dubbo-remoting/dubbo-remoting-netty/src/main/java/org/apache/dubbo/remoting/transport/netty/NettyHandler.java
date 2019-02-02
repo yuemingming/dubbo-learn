@@ -56,6 +56,7 @@ public class NettyHandler extends SimpleChannelHandler {
             throw new IllegalArgumentException("handler == null");
         }
         this.url = url;
+        //这里的 handler 类型为 NettyServer
         this.handler = handler;
     }
 
@@ -65,6 +66,7 @@ public class NettyHandler extends SimpleChannelHandler {
 
     @Override
     public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+        //获取NettyChannel
         NettyChannel channel = NettyChannel.getOrAddChannel(ctx.getChannel(), url, handler);
         try {
             if (channel != null) {
@@ -89,8 +91,10 @@ public class NettyHandler extends SimpleChannelHandler {
 
     @Override
     public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
+        //获取NettyChannel
         NettyChannel channel = NettyChannel.getOrAddChannel(ctx.getChannel(), url, handler);
         try {
+            //继续向下调用
             handler.received(channel, e.getMessage());
         } finally {
             NettyChannel.removeChannelIfDisconnected(ctx.getChannel());

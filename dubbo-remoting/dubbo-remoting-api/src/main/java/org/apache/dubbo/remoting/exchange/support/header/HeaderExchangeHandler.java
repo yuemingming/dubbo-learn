@@ -97,10 +97,12 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
         // find handler by message class.
         Object msg = req.getData();
         try {
-            // handle data.
+            // 继续向下调用
             CompletableFuture<Object> future = handler.reply(channel, msg);
             if (future.isDone()) {
+                //设置 OK 状态码
                 res.setStatus(Response.OK);
+                //设置调用结果
                 res.setResult(future.get());
                 channel.send(res);
                 return;
@@ -122,6 +124,7 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
                 }
             });
         } catch (Throwable e) {
+            // 若调用过程出现异常，则设置 SERVICE_ERROR，表示服务端异常
             res.setStatus(Response.SERVICE_ERROR);
             res.setErrorMessage(StringUtils.toString(e));
             channel.send(res);
@@ -198,7 +201,7 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
                 if (request.isEvent()) {
                     handlerEvent(channel, request);
                 } else {
-                    //处理普通请求
+                    //双向通信
                     if (request.isTwoWay()) {
                         handleRequest(exchangeChannel, request);
                     } else {
