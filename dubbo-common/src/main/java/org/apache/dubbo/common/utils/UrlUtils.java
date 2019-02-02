@@ -399,38 +399,47 @@ public class UrlUtils {
 
     public static boolean isMatchGlobPattern(String pattern, String value, URL param) {
         if (param != null && pattern.startsWith("$")) {
+            //引用服务消费者参数，param参数为服务消费者url
             pattern = param.getRawParameter(pattern.substring(1));
         }
+        //调用重载方法继续比较
         return isMatchGlobPattern(pattern, value);
     }
 
     public static boolean isMatchGlobPattern(String pattern, String value) {
+        //对 * 通配符提供支持
         if ("*".equals(pattern))
-            return true;
+            return true;//匹配规则为通配符*,直接返回true即可。
         if ((pattern == null || pattern.length() == 0)
                 && (value == null || value.length() == 0))
-            return true;
+            return true;//pattern和value均为空，此时可认为两者相等，返回true。
         if ((pattern == null || pattern.length() == 0)
                 || (value == null || value.length() == 0))
-            return false;
-
+            return false;//pattern和value其中有一个为空，表明两者不相等，返回false。
+        //定位*通配符位置
         int i = pattern.lastIndexOf('*');
         // doesn't find "*"
         if (i == -1) {
-            return value.equals(pattern);
+            return value.equals(pattern);//匹配规则中不包含通配符，此时直接比较value和pattern是否相等即可，并返回比较结果。
         }
-        // "*" is at the end
+        // "*" is at the end 通配符"*"在匹配规则尾部，比如10.0.21.*
         else if (i == pattern.length() - 1) {
+            //检测value是否以"不含通配符的匹配规则"开通，并返回结果。比如：
+            //pattern = 10.0.21.*,value=10.0.21.12此时返回true
             return value.startsWith(pattern.substring(0, i));
         }
-        // "*" is at the beginning
+        // "*" is at the beginning通配符"*"在匹配规则头部
         else if (i == 0) {
+            //检测value是否以"不含通配符的匹配规则"结尾，并返回结果。
             return value.endsWith(pattern.substring(i + 1));
         }
         // "*" is in the middle
+        //通配符"*"在匹配规则中间位置
         else {
+            //通过通配符将pattern分成两半，得到prefix和suffix
             String prefix = pattern.substring(0, i);
             String suffix = pattern.substring(i + 1);
+            //检测value是否以prefix开头，且以suffix结尾，并返回结果。
             return value.startsWith(prefix) && value.endsWith(suffix);
         }
     }
